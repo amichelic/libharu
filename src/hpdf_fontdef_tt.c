@@ -1193,9 +1193,15 @@ HPDF_TTFontDef_GetCharWidth  (HPDF_FontDef   fontdef,
     HPDF_UINT16 advance_width;
     HPDF_TTF_LongHorMetric hmetrics;
     HPDF_TTFontDefAttr attr = (HPDF_TTFontDefAttr)fontdef->attr;
-    HPDF_UINT16 gid = HPDF_TTFontDef_GetGlyphid (fontdef, unicode);
+    HPDF_UINT16 gid;
 
     HPDF_PTRACE((" HPDF_TTFontDef_GetCharWidth\n"));
+
+    if (attr->is_cidfont) {
+	gid = unicode;
+    } else {
+        gid = HPDF_TTFontDef_GetGlyphid (fontdef, unicode);
+    }
 
     if (gid >= attr->num_glyphs) {
         HPDF_PTRACE((" HPDF_TTFontDef_GetCharWidth WARNING gid > "

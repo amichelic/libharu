@@ -418,6 +418,10 @@ CIDFontType2_New (HPDF_Font parent, HPDF_Xref xref)
 	}
     }
 
+    if (fontdef_attr->is_cidfont) {
+	max = fontdef_attr->num_glyphs;
+    }
+
     if (max > 0) {
         HPDF_INT16 dw = fontdef->missing_width;
         HPDF_UNICODE *ptmp_map = tmp_map;
@@ -431,8 +435,15 @@ CIDFontType2_New (HPDF_Font parent, HPDF_Xref xref)
         if (HPDF_Dict_Add (font, "W", array) != HPDF_OK)
             return NULL;
 
-        for (i = 0; i < max; i++, ptmp_map++) {
-            HPDF_INT w = HPDF_TTFontDef_GetGidWidth (fontdef, *ptmp_map);
+        for (i = 0; i < max; i++) {
+            HPDF_INT w;
+
+            if (fontdef_attr->is_cidfont) {
+                w = HPDF_TTFontDef_GetGidWidth (fontdef, i);
+	    } else {
+                w = HPDF_TTFontDef_GetGidWidth (fontdef, *ptmp_map);
+		ptmp_map++;
+	    }
 
             if (w != dw) {
                 if (!tmp_array) {
@@ -455,26 +466,30 @@ CIDFontType2_New (HPDF_Font parent, HPDF_Xref xref)
 
         /* create "CIDToGIDMap" data */
         if (fontdef_attr->embedding) {
-            attr->map_stream = HPDF_DictStream_New (font->mmgr, xref);
-            if (!attr->map_stream)
-                return NULL;
+            if (fontdef_attr->is_cidfont) {
+                ret += HPDF_Dict_AddName (font, "CIDToGIDMap", "Identity");
+            } else {
+                attr->map_stream = HPDF_DictStream_New (font->mmgr, xref);
+                if (!attr->map_stream)
+                    return NULL;
 
-            if (HPDF_Dict_Add (font, "CIDToGIDMap", attr->map_stream) != HPDF_OK)
-                return NULL;
+                if (HPDF_Dict_Add (font, "CIDToGIDMap", attr->map_stream) != HPDF_OK)
+                    return NULL;
 
-            for (i = 0; i < max; i++) {
-                HPDF_BYTE u[2];
-                HPDF_UINT16 gid = tmp_map[i];
+                for (i = 0; i < max; i++) {
+                    HPDF_BYTE u[2];
+                    HPDF_UINT16 gid = tmp_map[i];
 
-                u[0] = (HPDF_BYTE)(gid >> 8);
-                u[1] = (HPDF_BYTE)gid;
+                    u[0] = (HPDF_BYTE)(gid >> 8);
+                    u[1] = (HPDF_BYTE)gid;
 
-                HPDF_MemCpy ((HPDF_BYTE *)(tmp_map + i), u, 2);
+                    HPDF_MemCpy ((HPDF_BYTE *)(tmp_map + i), u, 2);
+                }
+
+                if ((ret = HPDF_Stream_Write (attr->map_stream->stream,
+                                (HPDF_BYTE *)tmp_map, max * 2)) != HPDF_OK)
+                    return NULL;
             }
-
-            if ((ret = HPDF_Stream_Write (attr->map_stream->stream,
-                            (HPDF_BYTE *)tmp_map, max * 2)) != HPDF_OK)
-                return NULL;
         }
     } else {
         HPDF_SetError (font->error, HPDF_INVALID_FONTDEF_DATA, 0);
