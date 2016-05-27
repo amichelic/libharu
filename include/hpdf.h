@@ -323,6 +323,9 @@ HPDF_UseCNSFonts   (HPDF_Doc   pdf);
 HPDF_EXPORT(HPDF_STATUS)
 HPDF_UseCNTFonts   (HPDF_Doc   pdf);
 
+HPDF_EXPORT(HPDF_STATUS)
+HPDF_SetTTFontGIDMode (HPDF_Doc         pdf,
+                       const char      *font_name);
 
 /*--------------------------------------------------------------------------*/
 /*----- outline ------------------------------------------------------------*/

@@ -1512,6 +1512,30 @@ HPDF_LoadTTFontFromFile (HPDF_Doc         pdf,
     return ret;
 }
 
+HPDF_EXPORT(HPDF_STATUS)
+HPDF_SetTTFontGIDMode (HPDF_Doc         pdf,
+                       const char      *font_name)
+{
+    HPDF_FontDef fontdef = NULL;
+
+    HPDF_PTRACE ((" HPDF_SetTTFontGIDMode\n"));
+
+    if (!HPDF_HasDoc (pdf))
+        return HPDF_DOC_INVALID_OBJECT;
+
+    if (!font_name) {
+        HPDF_RaiseError (&pdf->error, HPDF_INVALID_FONT_NAME, 0);
+        return HPDF_INVALID_FONT_NAME;
+    }
+
+    fontdef = HPDF_GetFontDef (pdf, font_name);
+
+    HPDF_TTFontDefAttr attr = (HPDF_TTFontDefAttr)fontdef->attr;
+    attr->is_cidfont = HPDF_TRUE;
+
+    return HPDF_OK;
+}
+
 
 static const char*
 LoadTTFontFromStream (HPDF_Doc         pdf,
