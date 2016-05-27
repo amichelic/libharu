@@ -1530,6 +1530,11 @@ HPDF_SetTTFontGIDMode (HPDF_Doc         pdf,
 
     fontdef = HPDF_GetFontDef (pdf, font_name);
 
+    if (fontdef->type != HPDF_FONTDEF_TYPE_TRUETYPE) {
+        HPDF_RaiseError (&pdf->error, HPDF_INVALID_FONTDEF_TYPE, 0);
+        return HPDF_INVALID_FONTDEF_TYPE;
+    }
+
     HPDF_TTFontDefAttr attr = (HPDF_TTFontDefAttr)fontdef->attr;
     attr->is_cidfont = HPDF_TRUE;
 
