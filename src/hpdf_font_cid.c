@@ -488,15 +488,17 @@ CIDFontType2_BeforeWrite_Func  (HPDF_Dict obj)
 
         for (i = 0; i < max; i++) {
             HPDF_INT w;
+	    HPDF_UINT16 gid;
 
             if (def_attr->is_cidfont) {
-                w = HPDF_TTFontDef_GetGidWidth (def, i);
+	        gid = i;
 	    } else {
-                w = HPDF_TTFontDef_GetGidWidth (def, *ptmp_map);
+	        gid = *ptmp_map;
 		ptmp_map++;
 	    }
+            w = HPDF_TTFontDef_GetGidWidth (def, gid);
 
-            if (w != dw) {
+            if (def_attr->glyph_tbl.flgs[gid] && w != dw) {
                 if (!tmp_array) {
                     if (HPDF_Array_AddNumber (array, i) != HPDF_OK)
                         return HPDF_FAILD_TO_ALLOC_MEM;
