@@ -82,6 +82,7 @@ HPDF_Type0Font_New  (HPDF_MMgr        mmgr,
 {
     HPDF_Dict font;
     HPDF_FontAttr attr;
+    HPDF_TTFontDefAttr ttfontdef_attr;
     HPDF_CMapEncoderAttr encoder_attr;
     HPDF_STATUS ret = 0;
     HPDF_Array descendant_fonts;
@@ -149,12 +150,23 @@ HPDF_Type0Font_New  (HPDF_MMgr        mmgr,
 	 */
         if (HPDF_StrCmp(encoder_attr->ordering, "Identity-H") == 0) {
 	    ret += HPDF_Dict_AddName (font, "Encoding", "Identity-H");
-	    attr->cmap_stream = CreateCMap (encoder, xref);
 
-	    if (attr->cmap_stream) {
-	        ret += HPDF_Dict_Add (font, "ToUnicode", attr->cmap_stream);
-	    } else
-	        return NULL;
+            int want_cmap = 1;
+            if (fontdef->type != HPDF_FONTDEF_TYPE_CID) {
+                ttfontdef_attr = (HPDF_TTFontDefAttr)fontdef->attr;
+	    }
+	    if (ttfontdef_attr && ttfontdef_attr->is_cidfont) {
+		want_cmap = 0;
+	    }
+
+	    if (want_cmap) {
+	        attr->cmap_stream = CreateCMap (encoder, xref);
+
+	        if (attr->cmap_stream) {
+	            ret += HPDF_Dict_Add (font, "ToUnicode", attr->cmap_stream);
+	        } else
+	            return NULL;
+	    }
 	} else {
             attr->cmap_stream = CreateCMap (encoder, xref);
 
